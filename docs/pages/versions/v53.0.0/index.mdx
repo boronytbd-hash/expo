@@ -1,4 +1,74 @@
----
+---import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, Button, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+
+export default function App() {
+  const [mode, setMode] = useState("login"); // login | admin | user
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [users, setUsers] = useState({});
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [bets, setBets] = useState([]);
+  const [history, setHistory] = useState([]);
+
+  // Timer
+  useEffect(() => {
+    if (mode === "user") {
+      if (timeLeft === 0) {
+        finishRound();
+        setTimeLeft(30);
+      }
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeLeft, mode]);
+
+  // Register/Login user
+  const handleUserLogin = () => {
+    if (!name) return;
+    let tempUsers = { ...users };
+    if (!tempUsers[name]) {
+      tempUsers[name] = { balance: 1000 };
+    }
+    setUsers(tempUsers);
+    setCurrentUser(name);
+    setMode("user");
+  };
+
+  // Admin Login
+  const handleAdminLogin = () => {
+    if (password === "admin123") {
+      setMode("admin");
+    } else {
+      alert("Wrong password!");
+    }
+  };
+
+  // Place Bet
+  const placeBet = (choice) => {
+    if (users[currentUser].balance < 100) {
+      alert("Not enough balance!");
+      return;
+    }
+    let tempUsers = { ...users };
+    tempUsers[currentUser].balance -= 100;
+    setUsers(tempUsers);
+    setBets([...bets, { user: currentUser, choice }]);
+  };
+
+  // Finish round
+  const finishRound = () => {
+    if (bets.length === 0) return;
+    const winning = Math.random() > 0.5 ? "Red" : "Green";
+    let tempUsers = { ...users };
+    bets.forEach((b) => {
+      if (b.choice === winning) {
+        tempUsers[b.user].balance += 200;
+      }
+    });
+    setUsers(tempUsers);
+    setHistory([{ round: Date.now(), winning, bets }, ...history]);
 title: Reference
 hideTOC: true
 ---
